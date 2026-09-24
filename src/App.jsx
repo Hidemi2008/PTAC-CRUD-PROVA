@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const URL = "https://jsonplaceholder.typicode.com/todos"
+const URL = "https://jsonplaceholder.typicode.com/todos?_limit=15"
 
 export default function App() {
   const [ideias, setIdeias] = useState([])
@@ -62,11 +62,20 @@ export default function App() {
         <h1>Minhas ideias</h1>
 
         <div>
-          <h1>{ideias.title}</h1>
-          <p>{ideias.completed}</p>
-          <button>Marca executada</button>
-          <button>Editar</button>
-          <button>Excluir</button>
+          {
+            ideias.map((i) => (
+              <>
+                <h1>{i.title}</h1>
+                <p>{i.completed}</p>
+                <button>Marca executada</button>
+                <button>Editar</button>
+                <button>Excluir</button>
+              </>
+
+            )
+
+            )}
+
         </div>
       </section>
     </>
