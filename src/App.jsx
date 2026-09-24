@@ -8,11 +8,15 @@ export default function App() {
   const [erro, setErro] = useState(null)
 
   useEffect(() => {
+    const controle = new AbortController()  // cria um controle
+    const signal = controle.signal
+
+
     async function buscar() {
       try {
         setCarregando(true)
         setErro(null)
-        const resp = await fetch(URL)
+        const resp = await fetch(URL, { signal })
         if (!resp.ok) {
           // 4xx ou 5xx — fetch NÃO rejeita para esses status! Precisamos lançar à mão.
           throw new Error(`HTTP ${resp.status} — ${resp.statusText}`)
@@ -21,13 +25,17 @@ export default function App() {
         setIdeias(data)
         console.log(ideias)
       } catch (e) {
-        setErro(e.message)
+        if (e.name !== 'AbortError') {
+          setErro(e.message)
+        }
       } finally {
         setCarregando(false)
       }
     }
 
     buscar()
+
+    return () => controle.abort()
   }, [])
 
   if (carregando) return <p>Carregando...</p>
