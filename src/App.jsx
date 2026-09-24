@@ -50,7 +50,7 @@ export default function App() {
       const resp = await fetch(URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({userId: 1, titulo: titulo, completed: false }),
+        body: JSON.stringify({ userId: 1, titulo: titulo, completed: false }),
       })
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
       const data = await resp.json()
@@ -61,6 +61,24 @@ export default function App() {
     } finally {
       setEnviando(false)
     }
+  }
+
+  async function atualizarUsuario(id, novosDados) {
+    const resp = await fetch(`${URL}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(novosDados),
+    })
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+    return await resp.json()
+  }
+
+  async function excluirUsuario(id) {
+    const resp = await fetch(`${URL}/${id}`, {
+      method: 'DELETE',
+    })
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+    return true
   }
 
   if (carregando) return <p>Carregando...</p>
