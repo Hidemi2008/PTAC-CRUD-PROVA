@@ -50,7 +50,7 @@ export default function App() {
       const resp = await fetch(URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titulo: titulo }),
+        body: JSON.stringify({userId: 1, titulo: titulo, completed: false }),
       })
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
       const data = await resp.json()
@@ -85,7 +85,7 @@ export default function App() {
           <button disabled={enviando}>Adicionar ideia</button>
           {enviando && <p>Enviando...</p>}
           {erro && <p>Erro: {erro}</p>}
-          {criado && <p> Criado com id={criado.id} e titulo={criado.titulo}.</p>}
+          {criado && <p> Criado com id={criado.userId} e titulo={criado.titulo}.</p>}
         </form>
       </div>
 
