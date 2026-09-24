@@ -7,8 +7,12 @@ export default function App() {
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
 
+  const [titulo, setTitulo] = useState("")
+  const [enviando, setEnviando] = useState(false)
+  const [criado, setCriado] = useState(null)
+
   useEffect(() => {
-    const controle = new AbortController()  // cria um controle
+    const controle = new AbortController()
     const signal = controle.signal
 
 
@@ -18,7 +22,6 @@ export default function App() {
         setErro(null)
         const resp = await fetch(URL, { signal })
         if (!resp.ok) {
-          // 4xx ou 5xx — fetch NÃO rejeita para esses status! Precisamos lançar à mão.
           throw new Error(`HTTP ${resp.status} — ${resp.statusText}`)
         }
         const data = await resp.json()
@@ -38,6 +41,28 @@ export default function App() {
     return () => controle.abort()
   }, [])
 
+  async function enviar(e) {
+    e.preventDefault()
+    setEnviando(true)
+    setErro(null)
+    setCriado(null)
+    try {
+      const resp = await fetch(URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titulo: titulo }),
+      })
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+      const data = await resp.json()
+      setCriado(data)
+      setTitulo("")
+    } catch (e) {
+      setErro(e.message)
+    } finally {
+      setEnviando(false)
+    }
+  }
+
   if (carregando) return <p>Carregando...</p>
   if (erro) return <p>Erro: {erro}</p>
   if (ideias.length === 0) return <p>Nenhum usuário encontrado.</p>
@@ -50,11 +75,17 @@ export default function App() {
       </header>
 
       <div>
-        <form action="">
-          <h1>Nova Ideia</h1>
-          <p>Título</p>
-          <input type="text" placeholder="teste" />
-          <button>Adicionar ideia</button>
+        <form onSubmit={enviar}>
+          <h2>Nova Ideia</h2>
+          <input
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            placeholder="App de receitas da vovó"
+          />
+          <button disabled={enviando}>Adicionar ideia</button>
+          {enviando && <p>Enviando...</p>}
+          {erro && <p>Erro: {erro}</p>}
+          {criado && <p> Criado com id={criado.id} e titulo={criado.titulo}.</p>}
         </form>
       </div>
 
@@ -66,7 +97,7 @@ export default function App() {
             ideias.map((i) => (
               <>
                 <h1>{i.title}</h1>
-                <p>{i.completed}</p>
+                <h1>{i.completed}</h1>
                 <button>Marca executada</button>
                 <button>Editar</button>
                 <button>Excluir</button>
