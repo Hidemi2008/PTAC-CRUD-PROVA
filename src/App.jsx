@@ -10,6 +10,7 @@ export default function App() {
   const [titulo, setTitulo] = useState("")
   const [enviando, setEnviando] = useState(false)
   const [criado, setCriado] = useState(null)
+  const [editandoId, setEditandoId] = useState(null)
 
   useEffect(() => {
     const controle = new AbortController()
@@ -26,7 +27,6 @@ export default function App() {
         }
         const data = await resp.json()
         setIdeias(data)
-        console.log(ideias)
       } catch (e) {
         if (e.name !== 'AbortError') {
           setErro(e.message)
@@ -47,6 +47,21 @@ export default function App() {
     setErro(null)
     setCriado(null)
     try {
+      if (editandoId !== null) {
+        const ideiaAtual = ideias.find((ideia) => ideia.id === editandoId)
+        const dadosAtualizados = { ...ideiaAtual, title: titulo }
+        const data = await atualizarIdeia(editandoId, dadosAtualizados)
+
+        setIdeias((ideiasAtuais) =>
+          ideiasAtuais.map((ideia) =>
+            ideia.id === editandoId ? { ...ideia, ...data, title: titulo } : ideia
+          )
+        )
+        setTitulo("")
+        setEditandoId(null)
+        return
+      }
+
       const resp = await fetch(URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -68,7 +83,7 @@ export default function App() {
     }
   }
 
-  async function atualizarUsuario(id, novosDados) {
+  async function atualizarIdeia(id, novosDados) {
     const resp = await fetch(`${URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -76,6 +91,20 @@ export default function App() {
     })
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
     return await resp.json()
+  }
+
+  function iniciarEdicao(ideia) {
+    setTitulo(ideia.title)
+    setEditandoId(ideia.id)
+    setCriado(null)
+    setErro(null)
+  }
+
+  function cancelarEdicao() {
+    setTitulo("")
+    setEditandoId(null)
+    setCriado(null)
+    setErro(null)
   }
 
   async function excluirUsuario(id) {
@@ -99,16 +128,23 @@ export default function App() {
 
       <div>
         <form onSubmit={enviar}>
-          <h2>Nova Ideia</h2>
+          <h2>{editandoId !== null ? "Editar ideia" : "Nova ideia"}</h2>
           <input
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             placeholder="App de receitas da vovó"
           />
-          <button disabled={enviando}>Adicionar ideia</button>
+          <button disabled={enviando}>
+            {editandoId !== null ? "Salvar alterações" : "Adicionar ideia"}
+          </button>
+          {editandoId !== null && (
+            <button type="button" onClick={cancelarEdicao} disabled={enviando}>
+              Cancelar
+            </button>
+          )}
           {enviando && <p>Enviando...</p>}
           {erro && <p>Erro: {erro}</p>}
-          {criado && <p> Criado com id={criado.userId} e titulo={criado.titulo}.</p>}
+          {criado && <p> Criado com id={criado.userId} e titulo={criado.title}.</p>}
         </form>
       </div>
 
@@ -122,8 +158,8 @@ export default function App() {
                 <h1>{i.title}</h1>
                 <h1>{i.completed}</h1>
                 <button>Marca executada</button>
-                <button onClick={() => onEditar(u)}>Editar</button>
-                <button onClick={() => onExcluir(u.id)}>Excluir</button>
+                <button onClick={() => iniciarEdicao(i)}>Editar</button>
+                <button onClick={() => excluirUsuario(i.id)}>Excluir</button>
               </>
 
             )
