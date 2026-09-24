@@ -50,10 +50,15 @@ export default function App() {
       const resp = await fetch(URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: 1, titulo: titulo, completed: false }),
+        body: JSON.stringify({
+          userId: 1,
+          title: titulo,
+          completed: false
+        })
       })
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
       const data = await resp.json()
+      setIdeias((ideiasAtuais) => [...ideiasAtuais, data])
       setCriado(data)
       setTitulo("")
     } catch (e) {
@@ -117,8 +122,8 @@ export default function App() {
                 <h1>{i.title}</h1>
                 <h1>{i.completed}</h1>
                 <button>Marca executada</button>
-                <button>Editar</button>
-                <button>Excluir</button>
+                <button onClick={() => onEditar(u)}>Editar</button>
+                <button onClick={() => onExcluir(u.id)}>Excluir</button>
               </>
 
             )
