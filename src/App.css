@@ -5,7 +5,7 @@ header {
 
 .layout {
   display: grid;
-  grid-template-columns: ___ 1fr;
+  grid-template-columns: 300px 1fr;
   gap: 24px;
   padding: 24px;
 }
@@ -22,7 +22,7 @@ header {
 }
 
 .concluida h3 {
-  ___: line-through;
+  text-decoration: line-through;
 }
 
 @media (max-width: 700px) {

@@ -1,4 +1,4 @@
-export default function FormularioIdeia({titulo,setTitulo,editando,enviando,onSubmit,onCancelar,}) {
+export default function FormularioIdeia({ titulo, setTitulo, editando, enviando, onSubmit, onCancelar, }) {
     return (
         <form onSubmit={onSubmit}>
             <h2>{editando ? "Editar ideia" : "Nova ideia"}</h2>
@@ -11,7 +11,7 @@ export default function FormularioIdeia({titulo,setTitulo,editando,enviando,onSu
                 {editando ? "Salvar alterações" : "Adicionar ideia"}
             </button>
             {editando && (
-                <button type="Fbutton" onClick={onCancelar} disabled={enviando}>
+                <button type="button" onClick={onCancelar} disabled={enviando}>
                     Cancelar
                 </button>
             )}

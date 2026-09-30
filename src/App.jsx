@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import FormularioIdeia from "./components/FormularioIdeia";
 import ListaIdeias from "./components/ListaIdeias";
 
+import "./App.css";
+
 const URL_BASE = "https://jsonplaceholder.typicode.com/todos";
 const URL_LISTA = `${URL_BASE}?_limit=15`;
 
