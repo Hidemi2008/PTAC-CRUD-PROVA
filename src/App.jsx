@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import FormularioIdeia from "./components/FormularioIdeia";
+import ListaIdeias from "./components/ListaIdeias";
 
 const URL_BASE = "https://jsonplaceholder.typicode.com/todos";
 const URL_LISTA = `${URL_BASE}?_limit=15`;
@@ -22,7 +24,6 @@ export default function App() {
       try {
         setCarregando(true);
         setErroCarga(null);
-        // Usa URL_LISTA para trazer apenas 15 itens
         const resp = await fetch(URL_LISTA, { signal });
         if (!resp.ok) {
           throw new Error(`HTTP ${resp.status} — ${resp.statusText}`);
@@ -46,20 +47,17 @@ export default function App() {
   async function enviar(e) {
     e.preventDefault();
     if (!titulo.trim()) return;
-
     setEnviando(true);
     setErroAcao(null);
     setCriado(null);
 
     try {
       if (editandoId !== null) {
-        // --- LÓGICA DE EDIÇÃO ---
         const ideiaAtual = ideias.find((i) => i.id === editandoId);
         const dadosAtualizados = { ...ideiaAtual, title: titulo };
 
         await atualizarIdeia(editandoId, dadosAtualizados);
 
-        // Atualiza o estado local
         setIdeias((atuais) =>
           atuais.map((i) => (i.id === editandoId ? dadosAtualizados : i))
         );
@@ -67,7 +65,6 @@ export default function App() {
         setEditandoId(null);
         setTitulo("");
       } else {
-        // --- LÓGICA DE CRIAÇÃO ---
         const novaIdeia = {
           title: titulo,
           completed: false,
@@ -83,7 +80,6 @@ export default function App() {
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
 
-        // Usa Date.now() para garantir um ID único localmente
         const nova = { ...data, id: Date.now() };
 
         setIdeias((atuais) => [nova, ...atuais]);
@@ -124,11 +120,9 @@ export default function App() {
   async function excluirIdeia(id) {
     const backup = ideias;
     setErroAcao(null);
-    // Atualização otimista
     setIdeias((atuais) => atuais.filter((i) => i.id !== id));
 
     try {
-      // Método DELETE preenchido
       const resp = await fetch(`${URL_BASE}/${id}`, { method: "DELETE" });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     } catch (e) {
@@ -139,7 +133,6 @@ export default function App() {
 
   async function alternarStatus(ideia) {
     setErroAcao(null);
-    // Inverte o booleano do status
     const novoStatus = !ideia.completed;
 
     try {
@@ -159,66 +152,47 @@ export default function App() {
     <>
       <header>
         <h1>Banco de Ideias</h1>
-        <p>Projeto P1 - PTAC4 . anotação de ideias de projetos</p>
+        <p>Projeto P1 - PTAC4 · anotação de ideias de projetos</p>
       </header>
 
-      <div>
-        <form onSubmit={enviar}>
-          <h2>{editandoId !== null ? "Editar ideia" : "Nova ideia"}</h2>
-          <input
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            placeholder="App de receitas da vovó"
+      <main className="layout">
+        <aside>
+          <FormularioIdeia
+            titulo={titulo}
+            setTitulo={setTitulo}
+            editando={editandoId !== null}
+            enviando={enviando}
+            onSubmit={enviar}
+            onCancelar={cancelarEdicao}
           />
-          <button type="submit" disabled={enviando}>
-            {editandoId !== null ? "Salvar alterações" : "Adicionar ideia"}
-          </button>
-          {editandoId !== null && (
-            <button type="button" onClick={cancelarEdicao} disabled={enviando}>
-              Cancelar
-            </button>
-          )}
           {enviando && <p>Enviando...</p>}
           {erroAcao && <p>Erro: {erroAcao}</p>}
-          {criado && (
-            <p>Criado com sucesso! (ID: {criado.id} | Título: {criado.title})</p>
+          {criado && <p>Criada com id={criado.id} e título={criado.title}.</p>}
+        </aside>
+
+        <section>
+          <h2>Minhas ideias</h2>
+
+          {carregando && <p>Carregando ideias...</p>}
+
+          {erroCarga && (
+            <p>Não foi possível conectar à API. Tente novamente mais tarde.</p>
           )}
-        </form>
-      </div>
 
-      <section>
-        <h2>Minhas ideias</h2>
+          {!carregando && !erroCarga && ideias.length === 0 && (
+            <p>Nenhuma ideia por aqui — que tal cadastrar a primeira?</p>
+          )}
 
-        {carregando && <p>Carregando ideias...</p>}
-
-        {erroCarga && (
-          <p>Não foi possível conectar à API. Tente novamente mais tarde.</p>
-        )}
-
-        {!carregando && !erroCarga && ideias.length === 0 && (
-          <p>Nenhuma ideia por aqui — que tal cadastrar a primeira?</p>
-        )}
-
-        {!carregando && !erroCarga && ideias.length > 0 && (
-          <div>
-            {ideias.map((i) => (
-              <article
-                key={i.id}
-                className={i.completed ? "cartao concluida" : "cartao"}
-              >
-                <h3>{i.title}</h3>
-                <p>Status: {i.completed ? "Executada" : "Pendente"}</p>
-
-                <button onClick={() => alternarStatus(i)}>
-                  {i.completed ? "Marcar pendente" : "Marcar executada"}
-                </button>
-                <button onClick={() => iniciarEdicao(i)}>Editar</button>
-                <button onClick={() => excluirIdeia(i.id)}>Excluir</button>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
+          {!carregando && !erroCarga && ideias.length > 0 && (
+            <ListaIdeias
+              ideias={ideias}
+              onAlternar={alternarStatus}
+              onEditar={iniciarEdicao}
+              onExcluir={excluirIdeia}
+            />
+          )}
+        </section>
+      </main>
     </>
   );
 }
