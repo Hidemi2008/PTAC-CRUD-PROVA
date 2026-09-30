@@ -131,11 +131,11 @@ export default function App() {
 
       setIdeias((atuais) =>
         atuais.map((i) =>
-          i.id === ideia.id ? { ...i, completed: ideia.completed } : i
+          i.id === ideia.id ? { ...i, completed: novoStatus } : i
         )
       )
     } catch (e) {
-      ___
+      setErroAcao(e.message)
     }
   }
 
@@ -183,13 +183,19 @@ export default function App() {
         {!carregando && !erroCarga && ideias.length > 0 && (
           <div>
             {ideias.map((i) => (
-              <div key={i.id}>
+              <article
+                key={i.userId}
+                className={i.completed ? "cartao concluida" : "cartao"}
+              >
                 <h3>{i.title}</h3>
-                <p>Status: {i.completed ? "Concluída" : "Pendente"}</p>
-                <button onClick={() => alternarStatus(i)}>Marca executada</button>
+                <p>Status: {___ ? "Executada" : "Pendente"}</p>
+
+                <button onClick={() => alternarStatus(i)}>
+                  {i.completed ? "Marcar pendente" : "Marcar executada"}
+                </button>
                 <button onClick={() => iniciarEdicao(i)}>Editar</button>
                 <button onClick={() => excluirIdeia(i.id)}>Excluir</button>
-              </div>
+              </article>
             ))}
           </div>
         )}
