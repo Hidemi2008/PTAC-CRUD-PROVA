@@ -1,137 +1,165 @@
 import { useState, useEffect } from "react";
 
-const URL_BASE = "https://jsonplaceholder.typicode.com/todos"
-const URL_LISTA = `${URL_BASE}?_limit=15`
+const URL_BASE = "https://jsonplaceholder.typicode.com/todos";
+const URL_LISTA = `${URL_BASE}?_limit=15`;
 
 export default function App() {
-  const [ideias, setIdeias] = useState([])
-  const [carregando, setCarregando] = useState(true)
-  const [erroCarga, setErroCarga] = useState(null)
-  const [erroAcao, setErroAcao] = useState(null)
+  const [ideias, setIdeias] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erroCarga, setErroCarga] = useState(null);
+  const [erroAcao, setErroAcao] = useState(null);
 
-  const [titulo, setTitulo] = useState("")
-  const [enviando, setEnviando] = useState(false)
-  const [criado, setCriado] = useState(null)
-  const [editandoId, setEditandoId] = useState(null)
+  const [titulo, setTitulo] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [criado, setCriado] = useState(null);
+  const [editandoId, setEditandoId] = useState(null);
 
   useEffect(() => {
-    const controle = new AbortController()
-    const signal = controle.signal
-
+    const controle = new AbortController();
+    const signal = controle.signal;
 
     async function buscar() {
       try {
-        setCarregando(true)
-        setErroCarga(null)
-        const resp = await fetch(URL_BASE, { signal })
+        setCarregando(true);
+        setErroCarga(null);
+        // Usa URL_LISTA para trazer apenas 15 itens
+        const resp = await fetch(URL_LISTA, { signal });
         if (!resp.ok) {
-          throw new Error(`HTTP ${resp.status} — ${resp.statusText}`)
+          throw new Error(`HTTP ${resp.status} — ${resp.statusText}`);
         }
-        const data = await resp.json()
-        setIdeias(data)
+        const data = await resp.json();
+        setIdeias(data);
       } catch (e) {
-        if (e.name !== 'AbortError') {
-          setErroCarga(e.message)
+        if (e.name !== "AbortError") {
+          setErroCarga(e.message);
         }
       } finally {
-        setCarregando(false)
+        setCarregando(false);
       }
     }
 
-    buscar()
+    buscar();
 
-    return () => controle.abort()
-  }, [])
+    return () => controle.abort();
+  }, []);
 
   async function enviar(e) {
-    e.preventDefault()
-    setEnviando(true)
-    if (!titulo.trim()) return
-    setErroAcao(null)
-    setCriado(null)
+    e.preventDefault();
+    if (!titulo.trim()) return;
+
+    setEnviando(true);
+    setErroAcao(null);
+    setCriado(null);
 
     try {
       if (editandoId !== null) {
-        // mantenha o seu bloco de edição como está
+        // --- LÓGICA DE EDIÇÃO ---
+        const ideiaAtual = ideias.find((i) => i.id === editandoId);
+        const dadosAtualizados = { ...ideiaAtual, title: titulo };
+
+        await atualizarIdeia(editandoId, dadosAtualizados);
+
+        // Atualiza o estado local
+        setIdeias((atuais) =>
+          atuais.map((i) => (i.id === editandoId ? dadosAtualizados : i))
+        );
+
+        setEditandoId(null);
+        setTitulo("");
+      } else {
+        // --- LÓGICA DE CRIAÇÃO ---
+        const novaIdeia = {
+          title: titulo,
+          completed: false,
+          userId: 1,
+        };
+
+        const resp = await fetch(URL_BASE, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(novaIdeia),
+        });
+
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        // Usa Date.now() para garantir um ID único localmente
+        const nova = { ...data, id: Date.now() };
+
+        setIdeias((atuais) => [nova, ...atuais]);
+        setCriado(nova);
+        setTitulo("");
       }
-
-      const resp = await fetch(URL_BASE, {
-        // mantenha method, headers e body
-      })
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
-      const data = await resp.json()
-
-      const nova = { ...data, id: ___ }   // dica: Date.now()
-      setIdeias((atuais) => [...atuais, nova])
-      setCriado(nova)
-      setTitulo("")
     } catch (e) {
-      setErroAcao(e.message)
+      setErroAcao(e.message);
     } finally {
-      setEnviando(false)
+      setEnviando(false);
     }
   }
 
   async function atualizarIdeia(id, novosDados) {
     const resp = await fetch(`${URL_BASE}/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(novosDados),
-    })
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
-    return await resp.json()
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    return await resp.json();
   }
 
   function iniciarEdicao(ideia) {
-    setTitulo(ideia.title)
-    setEditandoId(ideia.id)
-    setCriado(null)
-    setErroAcao(null)
+    setTitulo(ideia.title);
+    setEditandoId(ideia.id);
+    setCriado(null);
+    setErroAcao(null);
   }
 
   function cancelarEdicao() {
-    setTitulo("")
-    setEditandoId(null)
-    setCriado(null)
-    setErroAcao(null)
+    setTitulo("");
+    setEditandoId(null);
+    setCriado(null);
+    setErroAcao(null);
   }
 
   async function excluirIdeia(id) {
-    const backup = ideias
-    setErroAcao(null)
-    setIdeias((atuais) => atuais.filter((i) => i.id !== id))
+    const backup = ideias;
+    setErroAcao(null);
+    // Atualização otimista
+    setIdeias((atuais) => atuais.filter((i) => i.id !== id));
+
     try {
-      const resp = await fetch(`${URL_BASE}/${id}`, { method: '___' })
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+      // Método DELETE preenchido
+      const resp = await fetch(`${URL_BASE}/${id}`, { method: "DELETE" });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     } catch (e) {
-      setIdeias(backup)
-      setErroAcao(e.message)
+      setIdeias(backup);
+      setErroAcao(e.message);
     }
   }
 
   async function alternarStatus(ideia) {
-    setErroAcao(null)
-    const novoStatus = []
+    setErroAcao(null);
+    // Inverte o booleano do status
+    const novoStatus = !ideia.completed;
 
     try {
-      await atualizarIdeia(ideia.id, { ...ideia, completed: novoStatus })
+      await atualizarIdeia(ideia.id, { ...ideia, completed: novoStatus });
 
       setIdeias((atuais) =>
         atuais.map((i) =>
           i.id === ideia.id ? { ...i, completed: novoStatus } : i
         )
-      )
+      );
     } catch (e) {
-      setErroAcao(e.message)
+      setErroAcao(e.message);
     }
   }
-
 
   return (
     <>
       <header>
         <h1>Banco de Ideias</h1>
-        <p>Projeto P1 - PTAC4 . anotacao de ideias de projetos</p>
+        <p>Projeto P1 - PTAC4 . anotação de ideias de projetos</p>
       </header>
 
       <div>
@@ -142,7 +170,6 @@ export default function App() {
             onChange={(e) => setTitulo(e.target.value)}
             placeholder="App de receitas da vovó"
           />
-          {criado && <p>Criada com id={criado.___} e título={criado.title}.</p>}
           <button type="submit" disabled={enviando}>
             {editandoId !== null ? "Salvar alterações" : "Adicionar ideia"}
           </button>
@@ -153,7 +180,9 @@ export default function App() {
           )}
           {enviando && <p>Enviando...</p>}
           {erroAcao && <p>Erro: {erroAcao}</p>}
-          {criado && <p> Criado com id={criado.userId} e titulo={criado.title}.</p>}
+          {criado && (
+            <p>Criado com sucesso! (ID: {criado.id} | Título: {criado.title})</p>
+          )}
         </form>
       </div>
 
@@ -162,7 +191,9 @@ export default function App() {
 
         {carregando && <p>Carregando ideias...</p>}
 
-        {erroCarga && <p>Não foi possível conectar à API. Tente novamente mais tarde.</p>}
+        {erroCarga && (
+          <p>Não foi possível conectar à API. Tente novamente mais tarde.</p>
+        )}
 
         {!carregando && !erroCarga && ideias.length === 0 && (
           <p>Nenhuma ideia por aqui — que tal cadastrar a primeira?</p>
@@ -176,7 +207,7 @@ export default function App() {
                 className={i.completed ? "cartao concluida" : "cartao"}
               >
                 <h3>{i.title}</h3>
-                <p>Status: {[] ? "Executada" : "Pendente"}</p>
+                <p>Status: {i.completed ? "Executada" : "Pendente"}</p>
 
                 <button onClick={() => alternarStatus(i)}>
                   {i.completed ? "Marcar pendente" : "Marcar executada"}
@@ -190,5 +221,4 @@ export default function App() {
       </section>
     </>
   );
-
 }
