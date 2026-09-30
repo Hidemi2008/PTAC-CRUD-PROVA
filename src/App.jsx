@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
-const URL = "https://jsonplaceholder.typicode.com/todos?_limit=15"
+const URL_BASE = "https://jsonplaceholder.typicode.com/todos"
+const URL_LISTA = `${URL_BASE}?_limit=15`
 
 export default function App() {
   const [ideias, setIdeias] = useState([])
@@ -21,7 +22,7 @@ export default function App() {
       try {
         setCarregando(true)
         setErro(null)
-        const resp = await fetch(URL, { signal })
+        const resp = await fetch(URL_BASE, { signal })
         if (!resp.ok) {
           throw new Error(`HTTP ${resp.status} — ${resp.statusText}`)
         }
@@ -62,7 +63,7 @@ export default function App() {
         return
       }
 
-      const resp = await fetch(URL, {
+      const resp = await fetch(URL_BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -84,7 +85,7 @@ export default function App() {
   }
 
   async function atualizarIdeia(id, novosDados) {
-    const resp = await fetch(`${URL}/${id}`, {
+    const resp = await fetch(`${URL_BASE}/${id}`, { 
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(novosDados),
