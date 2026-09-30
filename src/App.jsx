@@ -46,7 +46,7 @@ export default function App() {
   async function enviar(e) {
     e.preventDefault()
     setEnviando(true)
-    setErro(null)
+    setErroAcao(null)
     setCriado(null)
     try {
       if (editandoId !== null) {
@@ -79,7 +79,7 @@ export default function App() {
       setCriado(data)
       setTitulo("")
     } catch (e) {
-      setErro(e.message)
+      setErroAcao(e.message)
     } finally {
       setEnviando(false)
     }
@@ -109,12 +109,18 @@ export default function App() {
     setErroAcao(null)
   }
 
-  async function excluirUsuario(id) {
-    const resp = await fetch(`${URL}/${id}`, {
-      method: 'DELETE',
-    })
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
-    return true
+  async function excluirIdeia(id) {
+    const backup = ideias
+    setErroAcao(null)
+    setIdeias((atuais) => atuais.filter((i) => i.id === id))
+
+    try {
+      const resp = await fetch(`${URL_BASE}/${id}`, { method: '___' })
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+    } catch (e) {
+      // TODO: devolver a lista de backup
+      setErroAcao(e.message)
+    }
   }
 
 
@@ -166,7 +172,7 @@ export default function App() {
                 <p>Status: {i.completed ? "Concluída" : "Pendente"}</p>
                 <button>Marcar executada</button>
                 <button onClick={() => iniciarEdicao(i)}>Editar</button>
-                <button onClick={() => excluirUsuario(i.id)}>Excluir</button>
+                <button onClick={() => excluirIdeia(i.id)}>Excluir</button>
               </div>
             ))}
           </div>
