@@ -112,14 +112,30 @@ export default function App() {
   async function excluirIdeia(id) {
     const backup = ideias
     setErroAcao(null)
-    setIdeias((atuais) => atuais.filter((i) => i.id === id))
-
+    setIdeias((atuais) => atuais.filter((i) => i.id !== id))
     try {
       const resp = await fetch(`${URL_BASE}/${id}`, { method: '___' })
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
     } catch (e) {
-      // TODO: devolver a lista de backup
+      setIdeias(backup)
       setErroAcao(e.message)
+    }
+  }
+
+  async function alternarStatus(ideia) {
+    setErroAcao(null)
+    const novoStatus = ___
+
+    try {
+      await atualizarIdeia(ideia.id, { ...ideia, completed: novoStatus })
+
+      setIdeias((atuais) =>
+        atuais.map((i) =>
+          i.id === ideia.id ? { ...i, completed: ideia.completed } : i
+        )
+      )
+    } catch (e) {
+      ___
     }
   }
 
@@ -170,7 +186,7 @@ export default function App() {
               <div key={i.id}>
                 <h3>{i.title}</h3>
                 <p>Status: {i.completed ? "Concluída" : "Pendente"}</p>
-                <button>Marcar executada</button>
+                <button onClick={() => alternarStatus(i)}>Marca executada</button>
                 <button onClick={() => iniciarEdicao(i)}>Editar</button>
                 <button onClick={() => excluirIdeia(i.id)}>Excluir</button>
               </div>
