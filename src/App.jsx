@@ -6,7 +6,8 @@ const URL_LISTA = `${URL_BASE}?_limit=15`
 export default function App() {
   const [ideias, setIdeias] = useState([])
   const [carregando, setCarregando] = useState(true)
-  const [erro, setErro] = useState(null)
+  const [erroCarga, setErroCarga] = useState(null)
+  const [erroAcao, setErroAcao] = useState(null)
 
   const [titulo, setTitulo] = useState("")
   const [enviando, setEnviando] = useState(false)
@@ -21,7 +22,7 @@ export default function App() {
     async function buscar() {
       try {
         setCarregando(true)
-        setErro(null)
+        setErroCarga(null)
         const resp = await fetch(URL_BASE, { signal })
         if (!resp.ok) {
           throw new Error(`HTTP ${resp.status} — ${resp.statusText}`)
@@ -30,7 +31,7 @@ export default function App() {
         setIdeias(data)
       } catch (e) {
         if (e.name !== 'AbortError') {
-          setErro(e.message)
+          setErroCarga(e.message)
         }
       } finally {
         setCarregando(false)
@@ -85,7 +86,7 @@ export default function App() {
   }
 
   async function atualizarIdeia(id, novosDados) {
-    const resp = await fetch(`${URL_BASE}/${id}`, { 
+    const resp = await fetch(`${URL_BASE}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(novosDados),
@@ -98,14 +99,14 @@ export default function App() {
     setTitulo(ideia.title)
     setEditandoId(ideia.id)
     setCriado(null)
-    setErro(null)
+    setErroAcao(null)
   }
 
   function cancelarEdicao() {
     setTitulo("")
     setEditandoId(null)
     setCriado(null)
-    setErro(null)
+    setErroAcao(null)
   }
 
   async function excluirUsuario(id) {
@@ -116,9 +117,6 @@ export default function App() {
     return true
   }
 
-  if (carregando) return <p>Carregando...</p>
-  if (erro) return <p>Erro: {erro}</p>
-  if (ideias.length === 0) return <p>Nenhum usuário encontrado.</p>
 
   return (
     <>
@@ -144,31 +142,37 @@ export default function App() {
             </button>
           )}
           {enviando && <p>Enviando...</p>}
-          {erro && <p>Erro: {erro}</p>}
+          {erroAcao && <p>Erro: {erroAcao}</p>}
           {criado && <p> Criado com id={criado.userId} e titulo={criado.title}.</p>}
         </form>
       </div>
 
       <section>
-        <h1>Minhas ideias</h1>
+        <h2>Minhas ideias</h2>
 
-        <div>
-          {
-            ideias.map((i) => (
-              <>
-                <h1>{i.title}</h1>
-                <h1>{i.completed}</h1>
-                <button>Marca executada</button>
+        {carregando && <p>Carregando ideias...</p>}
+
+        {erroCarga && <p>Não foi possível conectar à API. Tente novamente mais tarde.</p>}
+
+        {!carregando && !erroCarga && ideias.length === 0 && (
+          <p>Nenhuma ideia por aqui — que tal cadastrar a primeira?</p>
+        )}
+
+        {!carregando && !erroCarga && ideias.length > 0 && (
+          <div>
+            {ideias.map((i) => (
+              <div key={i.id}>
+                <h3>{i.title}</h3>
+                <p>Status: {i.completed ? "Concluída" : "Pendente"}</p>
+                <button>Marcar executada</button>
                 <button onClick={() => iniciarEdicao(i)}>Editar</button>
                 <button onClick={() => excluirUsuario(i.id)}>Excluir</button>
-              </>
-
-            )
-
-            )}
-
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </>
-  )
+  );
+
 }
