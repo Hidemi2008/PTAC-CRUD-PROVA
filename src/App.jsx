@@ -46,37 +46,24 @@ export default function App() {
   async function enviar(e) {
     e.preventDefault()
     setEnviando(true)
+    if (!titulo.trim()) return
     setErroAcao(null)
     setCriado(null)
+
     try {
       if (editandoId !== null) {
-        const ideiaAtual = ideias.find((ideia) => ideia.id === editandoId)
-        const dadosAtualizados = { ...ideiaAtual, title: titulo }
-        const data = await atualizarIdeia(editandoId, dadosAtualizados)
-
-        setIdeias((ideiasAtuais) =>
-          ideiasAtuais.map((ideia) =>
-            ideia.id === editandoId ? { ...ideia, ...data, title: titulo } : ideia
-          )
-        )
-        setTitulo("")
-        setEditandoId(null)
-        return
+        // mantenha o seu bloco de edição como está
       }
 
       const resp = await fetch(URL_BASE, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: 1,
-          title: titulo,
-          completed: false
-        })
+        // mantenha method, headers e body
       })
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
       const data = await resp.json()
-      setIdeias((ideiasAtuais) => [...ideiasAtuais, data])
-      setCriado(data)
+
+      const nova = { ...data, id: ___ }   // dica: Date.now()
+      setIdeias((atuais) => [...atuais, nova])
+      setCriado(nova)
       setTitulo("")
     } catch (e) {
       setErroAcao(e.message)
@@ -124,7 +111,7 @@ export default function App() {
 
   async function alternarStatus(ideia) {
     setErroAcao(null)
-    const novoStatus = ___
+    const novoStatus = []
 
     try {
       await atualizarIdeia(ideia.id, { ...ideia, completed: novoStatus })
@@ -155,7 +142,8 @@ export default function App() {
             onChange={(e) => setTitulo(e.target.value)}
             placeholder="App de receitas da vovó"
           />
-          <button disabled={enviando}>
+          {criado && <p>Criada com id={criado.___} e título={criado.title}.</p>}
+          <button type="submit" disabled={enviando}>
             {editandoId !== null ? "Salvar alterações" : "Adicionar ideia"}
           </button>
           {editandoId !== null && (
@@ -184,11 +172,11 @@ export default function App() {
           <div>
             {ideias.map((i) => (
               <article
-                key={i.userId}
+                key={i.id}
                 className={i.completed ? "cartao concluida" : "cartao"}
               >
                 <h3>{i.title}</h3>
-                <p>Status: {___ ? "Executada" : "Pendente"}</p>
+                <p>Status: {[] ? "Executada" : "Pendente"}</p>
 
                 <button onClick={() => alternarStatus(i)}>
                   {i.completed ? "Marcar pendente" : "Marcar executada"}
